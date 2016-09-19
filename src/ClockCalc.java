@@ -3,7 +3,7 @@
  * 
  * Also note, to avoid consuming an excessive amount of
  * lines, I have elected to not provide Javadoc info for
- * methods and fields in this class.
+ * most methods and fields in this class.
  */
 
 import java.io.*;
@@ -15,15 +15,15 @@ import com.google.gson.*;
  * This class contains methods and nested classes to
  * calculate the total price of purchasing every clock
  * and watch in the Shopicruit store.
- * <p>
+ * <p></p>
  * This solution is predicated on an individual purchasing
  * every variety of every product that is either a clock
  * or a watch.
- * <p>
+ * <p></p>
  * In order to compile, Google's Gson (v2.7) is required.
  * It can be downloaded from github.com/google/gson.
  * Gson is provided and used under the Apache 2.0 license.
- * <p>
+ * <p></p>
  * Thanks for considering this solution!
  * 
  * @author Zachary Wilkins
@@ -143,6 +143,14 @@ public class ClockCalc {
 		System.out.println("The total cost is $" + cost);
 	}
 	
+	/**
+	 * This method determines the cost of purchasing every
+	 * variation of every product that it is passed,
+	 * along with the tax (if the product is taxable).
+	 * @param prods the list of products and their variations
+	 * @param taxRate the sales tax required, e.g. 1.15
+	 * @return the final cost of all products, tax in
+	 */
 	private static double calcCost(LinkedList<Products> prods, double taxRate){
 		double cost = 0.0;
 		
@@ -176,6 +184,13 @@ public class ClockCalc {
 		return cost;
 	}
 	
+	/**
+	 * This method takes a list of store pages,
+	 * containing products, and determines if they
+	 * are watches or clocks.
+	 * @param pgs the list of store pages, converted from JSON
+	 * @return a list of watches and clocks, exclusively
+	 */
 	private static LinkedList<Products> checkAndConsolidate(LinkedList<StorePage> pgs){
 		LinkedList<Products> timeKeepers = new LinkedList<>();
 		
@@ -193,28 +208,36 @@ public class ClockCalc {
 		return timeKeepers;
 	}
 	
+	/**
+	 * This method browses the Shopicruit store, and converts
+	 * every page from JSON to a Java object.
+	 * @return a list of store pages, containing products
+	 * @throws Exception if the URL cannot be reached, or
+	 * if the BufferedReader has an I/O error, or if
+	 * the JSON object is not in the expected format.
+	 */
 	private static LinkedList<StorePage> sweepStore() throws Exception{
 		Gson gson = new Gson();
 		int count = 1;
-    	String emptyPage = "\"products\":[]";
-    	boolean looper = true;
-    	BufferedReader in = null;
-    	LinkedList<StorePage> pgs = new LinkedList<>();
+		String emptyPage = "\"products\":[]";
+		boolean looper = true;
+		BufferedReader in = null;
+		LinkedList<StorePage> pgs = new LinkedList<>();
 
-    	// Keep working through store pages until nothing is returned.
-    	while(looper){
-	        URL shopURL = new URL("http://shopicruit.myshopify.com/products.json?page=" + count);
-	        in = new BufferedReader(new InputStreamReader(shopURL.openStream()));
-	        String current = in.readLine();
-	        
-	        if(current.contains(emptyPage))
-	        	looper = false;
-	        else{
-	    		StorePage pg = gson.fromJson(current, StorePage.class);
-	        	pgs.add(pg);
-	        	count++;
-	        }
-    	}
+		// Keep working through store pages until nothing is returned.
+		while(looper){
+			URL shopURL = new URL("http://shopicruit.myshopify.com/products.json?page=" + count);
+			in = new BufferedReader(new InputStreamReader(shopURL.openStream()));
+			String current = in.readLine();
+
+			if(current.contains(emptyPage))
+				looper = false;
+			else{
+				StorePage pg = gson.fromJson(current, StorePage.class);
+				pgs.add(pg);
+				count++;
+			}
+		}
 		return pgs;
 	}
 }
