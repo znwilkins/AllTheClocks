@@ -7,7 +7,9 @@
  */
 
 import java.io.*;
+import java.math.*;
 import java.net.URL;
+import java.text.*;
 import java.util.*;
 import com.google.gson.*;
 
@@ -31,14 +33,14 @@ import com.google.gson.*;
 public class ClockCalc {
 	
 	// These fields contain the sales tax for each province/territory.
-	public final static double GST = 1.05;
-	public final static double SASK = 1.1;
-	public final static double BC = 1.12;
-	public final static double ONMB = 1.13;
-	public final static double PEI = 1.14;
-	public final static double QC = 1.14975;
-	public final static double MARI = 1.15;
-	public final static double NA = 1.0;
+	public final static BigDecimal GST = new BigDecimal("1.05");
+	public final static BigDecimal SASK = new BigDecimal("1.1");
+	public final static BigDecimal BC = new BigDecimal("1.12");
+	public final static BigDecimal ONMB = new BigDecimal("1.13");
+	public final static BigDecimal PEI = new BigDecimal("1.14");
+	public final static BigDecimal QC = new BigDecimal("1.14975");
+	public final static BigDecimal MARI = new BigDecimal("1.15");
+	public final static BigDecimal NA = new BigDecimal("1.0");
 	
 	public class Products{
 		private String title;
@@ -71,7 +73,7 @@ public class ClockCalc {
 		private boolean requires_shipping;
 		private boolean taxable;
 		private boolean available;
-		private double price;
+		private BigDecimal price;
 		
 		public boolean canPurchase(){
 			if(requires_shipping && available)
@@ -84,7 +86,7 @@ public class ClockCalc {
 			return taxable;
 		}
 		
-		public double getPrice(){
+		public BigDecimal getPrice(){
 			return price;
 		}
 		
@@ -104,7 +106,7 @@ public class ClockCalc {
 		String prov = keyboard.next().toUpperCase();
 		keyboard.close();
 		
-		double taxRate = 1.0;
+		BigDecimal taxRate = new BigDecimal("1.0");
 		
 		switch(prov){
 			case "AB":	taxRate = GST;
@@ -135,12 +137,12 @@ public class ClockCalc {
 						break;
 		}
 		
-		// Calculate cost of products and round to two decimal places.
-		double cost = calcCost(timeKeepers, taxRate);
-		cost = Math.round(cost * 100);
-		cost = cost / 100;
+		// Calculate cost of products and format.
+		BigDecimal cost = calcCost(timeKeepers, taxRate);
+		NumberFormat form = NumberFormat.getCurrencyInstance(Locale.CANADA);
+		String out = form.format(cost.doubleValue());
 		
-		System.out.println("The total cost is $" + cost);
+		System.out.println("The total cost is " + out);
 	}
 	
 	/**
@@ -151,23 +153,23 @@ public class ClockCalc {
 	 * @param taxRate the sales tax required, e.g. 1.15
 	 * @return the final cost of all products, tax in
 	 */
-	private static double calcCost(LinkedList<Products> prods, double taxRate){
-		double cost = 0.0;
+	private static BigDecimal calcCost(LinkedList<Products> prods, BigDecimal taxRate){
+		BigDecimal cost = new BigDecimal("0.0");
 		
 		// This for loop works through products...
 		for(int i = 0; i < prods.size(); ++i){
 			Products currProd = prods.get(i);
 			ArrayList<Variant> vars = currProd.getVariants();
-			double currProdCost = 0.0;
+			BigDecimal currProdCost = new BigDecimal("0.0");
 			
 			// ...and this for loops works through variations.
 			for(int j = 0; j < vars.size(); ++j){
 				Variant curVar = vars.get(j);
-				double curVarCost = 0.0;
+				BigDecimal curVarCost = new BigDecimal("0.0");
 				
 				if(curVar.canPurchase()){
 					if(curVar.isTaxable())
-						curVarCost = curVar.getPrice() * taxRate;
+						curVarCost = curVar.getPrice().multiply(taxRate);
 					else
 						curVarCost = curVar.getPrice();
 				}
@@ -175,10 +177,10 @@ public class ClockCalc {
 					System.out.println(curVar.title + currProd.title 
 							+ " is unavailable for order.");
 				
-				currProdCost += curVarCost;
+				currProdCost = currProdCost.add(curVarCost);
 			}
 			
-			cost += currProdCost;
+			cost = cost.add(currProdCost);
 		}
 		
 		return cost;
